@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Boss Watch — Maple Legend</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#101c17;
+    --bg-panel:#17251e;
+    --bg-card:#1d2e25;
+    --bg-card-hover:#22362b;
+    --border:rgba(230,224,206,0.09);
+    --border-strong:rgba(230,224,206,0.18);
+    --cream:#ece3d1;
+    --muted:#8ea698;
+    --amber:#e0983c;
+    --amber-glow:#f4b959;
+    --safe:#4f9d69;
+    --warn:#e0a83c;
+    --danger:#e2554a;
+    --danger-glow:#ff7a6b;
+    --radius:14px;
+    --shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  *{box-sizing:border-box;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+
+  html,body{
+    margin:0;
+    padding:0;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(224,152,60,0.07), transparent 45%),
+      radial-gradient(circle at 85% 100%, rgba(79,157,105,0.09), transparent 50%),
+      var(--bg-deep);
+    color:var(--cream);
+    font-family:'Inter', system-ui, sans-serif;
+    min-height:100vh;
+  }
+
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:28px 20px 80px;
+  }
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:18px;
+    margin-bottom:26px;
+    padding-bottom:20px;
+    border-bottom:1px solid var(--border);
+  }
+
+  .title-block{display:flex; align-items:center; gap:14px;}
+
+  .leaf-mark{
+    width:40px; height:40px; flex-shrink:0;
+    filter: drop-shadow(0 0 6px rgba(224,152,60,0.35));
+  }
+
+  h1{
+    font-family:'Cinzel', serif;
+    font-weight:700;
+    font-size:26px;
+    letter-spacing:0.02em;
+    margin:0;
+    color:var(--cream);
+  }
+
+  .subtitle{
+    font-size:13px;
+    color:var(--muted);
+    margin-top:3px;
+    letter-spacing:0.01em;
+  }
+
+  .header-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .stat-pill{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    padding:8px 14px;
+    border-radius:999px;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .stat-pill b{color:var(--amber-glow); font-weight:600;}
+  .stat-dot{width:7px;height:7px;border-radius:50%;background:var(--danger); box-shadow:0 0 8px var(--danger-glow);}
+
+  button{
+    font-family:'Inter', sans-serif;
+    cursor:pointer;
+    border:none;
+    outline:none;
+  }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:9px 16px;
+    border-radius:9px;
+    font-size:13.5px;
+    font-weight:600;
+    transition:transform 0.12s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn:active{transform:translateY(1px);}
+
+  .btn-primary{
+    background:linear-gradient(160deg, var(--amber-glow), var(--amber));
+    color:#1a1208;
+    box-shadow:0 4px 14px rgba(224,152,60,0.25);
+  }
+  .btn-primary:hover{box-shadow:0 6px 18px rgba(224,152,60,0.4);}
+
+  .btn-ghost{
+    background:var(--bg-panel);
+    color:var(--cream);
+    border:1px solid var(--border-strong);
+  }
+  .btn-ghost:hover{background:var(--bg-card-hover);}
+  .btn-ghost.active{
+    border-color:var(--amber);
+    color:var(--amber-glow);
+  }
+
+  .toolbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-bottom:22px;
+  }
+
+  .search-box{
+    flex:1;
+    min-width:180px;
+    position:relative;
+  }
+  .search-box input{
+    width:100%;
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    color:var(--cream);
+    padding:10px 14px 10px 36px;
+    border-radius:9px;
+    font-size:13.5px;
+    font-family:'Inter', sans-serif;
+  }
+  .search-box input::placeholder{color:var(--muted);}
+  .search-box input:focus{border-color:var(--amber); outline:none;}
+  .search-box svg{
+    position:absolute; left:12px; top:50%; transform:translateY(-50%);
+    width:14px; height:14px; opacity:0.5;
+  }
+
+  .sort-select{
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    color:var(--cream);
+    padding:10px 12px;
+    border-radius:9px;
+    font-size:13px;
+    font-family:'Inter', sans-serif;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
+    gap:16px;
+  }
+
+  .card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    gap:13px;
+    transition:border-color 0.2s ease, transform 0.15s ease;
+    overflow:hidden;
+    --bar-color: var(--muted);
+  }
+  .card:hover{border-color:var(--border-strong); transform:translateY(-2px);}
+
+  .card::before{
+    content:'';
+    position:absolute; left:0; top:0; bottom:0; width:4px;
+    background:var(--bar-color);
+    transition:background 0.6s linear;
+  }
+
+  .card.state-up{
+    border-color:rgba(226,85,74,0.4);
+  }
+
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+  }
+
+  .boss-name{
+    font-family:'Cinzel', serif;
+    font-weight:600;
+    font-size:16.5px;
+    line-height:1.25;
+    color:var(--cream);
+  }
+  .boss-loc{
+    font-size:11.5px;
+    color:var(--muted);
+    margin-top:3px;
+    display:flex; align-items:center; gap:4px;
+  }
+
+  .icon-btn{
+    background:transparent;
+    color:var(--muted);
+    width:26px; height:26px;
+    border-radius:6px;
+    display:flex; align-items:center; justify-content:center;
+    transition:background 0.15s ease, color 0.15s ease;
+    flex-shrink:0;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,0.06); color:var(--cream);}
+  .icon-btn svg{width:14px; height:14px;}
+
+  .card-menu{display:flex; gap:2px;}
+
+  .respawn-note{
+    font-size:11.5px;
+    color:var(--muted);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .respawn-note b{color:var(--muted); font-weight:600;}
+  .channel-summary{font-size:11px; color:var(--muted);}
+  .channel-summary b{color:var(--amber-glow);}
+
+  .channel-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:7px;
+  }
+
+  .chip{
+    position:relative;
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    border-radius:9px;
+    padding:8px 6px 7px;
+    text-align:center;
+    cursor:pointer;
+    transition:background 0.6s linear, border-color 0.6s linear, box-shadow 0.6s linear, transform 0.1s ease;
+    user-select:none;
+  }
+  .chip:hover{transform:translateY(-1px);}
+  .chip:active{transform:translateY(0);}
+
+  .chip-ch{
+    font-size:9.5px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--muted);
+    margin-bottom:3px;
+  }
+  .chip-time{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    font-weight:700;
+    color:var(--cream);
+    line-height:1.15;
+  }
+  .chip-sub{
+    font-size:8.5px;
+    color:var(--muted);
+    margin-top:2px;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+  }
+
+  .chip.idle{opacity:0.68;}
+  .chip.idle .chip-time{color:var(--muted); font-size:11px; font-weight:500;}
+
+  .chip.counting .chip-time{color:var(--cream);}
+
+  .chip.up{
+    background:rgba(226,85,74,0.2) !important;
+    border-color:rgba(226,85,74,0.6) !important;
+    animation:pulseChip 1.5s ease-in-out infinite;
+  }
+  .chip.up .chip-time{color:var(--danger-glow); font-size:12.5px;}
+  @keyframes pulseChip{
+    0%,100%{box-shadow:0 0 0 rgba(226,85,74,0);}
+    50%{box-shadow:0 0 16px rgba(226,85,74,0.4);}
+  }
+
+  .chip-reset{
+    position:absolute;
+    top:-5px; right:-5px;
+    width:16px; height:16px;
+    border-radius:50%;
+    background:var(--bg-deep);
+    border:1px solid var(--border-strong);
+    color:var(--muted);
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px;
+    line-height:1;
+    opacity:0;
+    transition:opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .chip:hover .chip-reset{opacity:1;}
+  .chip-reset:hover{color:var(--danger-glow); border-color:var(--danger-glow);}
+
+  .card-actions{
+    display:flex;
+    gap:8px;
+  }
+  .card-actions .btn{flex:1; justify-content:center; padding:8px 10px; font-size:12px;}
+
+  .empty-state{
+    grid-column:1/-1;
+    text-align:center;
+    padding:60px 20px;
+    color:var(--muted);
+    border:1px dashed var(--border-strong);
+    border-radius:var(--radius);
+  }
+  .empty-state svg{width:34px; height:34px; opacity:0.4; margin-bottom:10px;}
+
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(8,12,10,0.72);
+    backdrop-filter:blur(3px);
+    display:flex; align-items:center; justify-content:center;
+    z-index:50;
+    padding:20px;
+  }
+  .modal{
+    background:var(--bg-panel);
+    border:1px solid var(--border-strong);
+    border-radius:16px;
+    padding:24px;
+    width:100%;
+    max-width:380px;
+    box-shadow:var(--shadow);
+  }
+  .modal h2{
+    font-family:'Cinzel', serif;
+    font-size:18px;
+    margin:0 0 18px 0;
+    color:var(--cream);
+  }
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .field input{
+    width:100%;
+    background:var(--bg-card);
+    border:1px solid var(--border-strong);
+    color:var(--cream);
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:14px;
+    font-family:'Inter', sans-serif;
+  }
+  .field input:focus{outline:none; border-color:var(--amber);}
+  .modal-actions{
+    display:flex; gap:10px; margin-top:18px;
+  }
+  .modal-actions .btn{flex:1; justify-content:center;}
+  .field-hint{font-size:11px; color:var(--muted); margin-top:5px;}
+
+  .loading{
+    text-align:center;
+    padding:80px 20px;
+    color:var(--muted);
+    font-size:13.5px;
+  }
+
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:11.5px;
+    margin-top:36px;
+    line-height:1.6;
+  }
+
+  @media (max-width:480px){
+    h1{font-size:21px;}
+    .grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="title-block">
+      <svg class="leaf-mark" viewBox="0 0 100 100" fill="none">
+        <path d="M50 8 C58 22 78 26 84 40 C90 55 82 66 70 68 C74 76 72 86 64 92 C56 86 55 78 55 72 C52 78 50 88 50 92 C50 88 48 78 45 72 C45 78 44 86 36 92 C28 86 26 76 30 68 C18 66 10 55 16 40 C22 26 42 22 50 8Z" fill="url(#leafGrad)"/>
+        <path d="M50 8 L50 92" stroke="#1a2a20" stroke-width="1.5" opacity="0.4"/>
+        <defs>
+          <linearGradient id="leafGrad" x1="0" y1="0" x2="100" y2="100">
+            <stop offset="0%" stop-color="#f4b959"/>
+            <stop offset="100%" stop-color="#c9702e"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div>
+        <h1>Mini Boss Watch</h1>
+        <div class="subtitle">Maple Legend respawn tracker · 6 channels each</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="stat-pill"><span class="stat-dot" id="upDot"></span><b id="upCount">0</b>&nbsp;guaranteed up</div>
+      <button class="btn btn-ghost" id="soundToggle" title="Toggle alert sound">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M19 9a5 5 0 0 1 0 6"/></svg>
+        Sound
+      </button>
+      <button class="btn btn-primary" id="addBossBtn">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        Add Boss
+      </button>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="searchInput" placeholder="Search bosses or locations…">
+    </div>
+    <select class="sort-select" id="sortSelect">
+      <option value="respawn">Sort: Soonest / most likely</option>
+      <option value="name">Sort: Name (A–Z)</option>
+      <option value="location">Sort: Location</option>
+    </select>
+  </div>
+
+  <div id="gridContainer">
+    <div class="loading">Loading your boss watch…</div>
+  </div>
+
+  <footer>
+    Click a channel the moment you defeat it there. It counts down to the earliest possible respawn (base −15%),<br>
+    then enters a spawn window that grows more intense the closer it gets to the latest possible respawn (base +15%) — guaranteed up by then.
+  </footer>
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'bosses';
+  const CHANNEL_COUNT = 6;
+  const VARIANCE = 0.15;
+  let bosses = [];
+  let editingId = null;
+  let soundOn = false;
+  let audioCtx = null;
+  const dinged = new Set();
+
+  function freshChannels(){
+    return Array.from({length: CHANNEL_COUNT}, () => ({ killedAt:null }));
+  }
+
+  const defaultBosses = () => ([
+    { id: crypto.randomUUID(), name:'Faust', location:'Sleepywood', respawnMin:45, channels: freshChannels() },
+    { id: crypto.randomUUID(), name:'King Clang', location:'Nautilus Harbor', respawnMin:45, channels: freshChannels() },
+    { id: crypto.randomUUID(), name:'Dyle', location:'Kerning Swamp', respawnMin:45, channels: freshChannels() },
+    { id: crypto.randomUUID(), name:'Zeno', location:'Omega Sector', respawnMin:45, channels: freshChannels() },
+    { id: crypto.randomUUID(), name:'Deo', location:'Six Path Crossway', respawnMin:45, channels: freshChannels() },
+    { id: crypto.randomUUID(), name:'Old Fox', location:'Mushroom Castle', respawnMin:45, channels: freshChannels() },
+	{ id: crypto.randomUUID(), name:'Timer', location:'Ludibirium Clock Tower', respawnMin:45, channels: freshChannels() },
+	{ id: crypto.randomUUID(), name:'Old Fox', location:'Mushroom Castle', respawnMin:45, channels: freshChannels() },
+	{ id: crypto.randomUUID(), name:'Old Fox', location:'Mushroom Castle', respawnMin:45, channels: freshChannels() },
+	{ id: crypto.randomUUID(), name:'Old Fox', location:'Mushroom Castle', respawnMin:45, channels: freshChannels() },
+	{ id: crypto.randomUUID(), name:'Old Fox', location:'Mushroom Castle', respawnMin:45, channels: freshChannels() },
+	{ id: crypto.randomUUID(), name:'Old Fox', location:'Mushroom Castle', respawnMin:45, channels: freshChannels() },
+  ]);
+
+  function fmtClock(ms){
+    if(ms < 0) ms = 0;
+    const totalSec = Math.floor(ms/1000);
+    const h = Math.floor(totalSec/3600);
+    const m = Math.floor((totalSec%3600)/60);
+    const s = totalSec%60;
+    const pad = n => String(n).padStart(2,'0');
+    return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+  }
+
+  // Countdown runs to the MIN of the range. Past that, a probability window
+  // opens and grows more intense until the MAX, where spawn is guaranteed.
+  function channelStatus(ch, respawnMin, now){
+    if(!ch.killedAt) return { state:'idle', remaining:0, t:0 };
+    const minMs = respawnMin * (1 - VARIANCE) * 60000;
+    const maxMs = respawnMin * (1 + VARIANCE) * 60000;
+    const elapsed = now - ch.killedAt;
+
+    if(elapsed < minMs){
+      return { state:'counting', remaining: minMs - elapsed, t:0 };
+    }
+    if(elapsed < maxMs){
+      const t = (elapsed - minMs) / (maxMs - minMs); // 0 -> just entered window, 1 -> guaranteed
+      return { state:'window', remaining: maxMs - elapsed, t };
+    }
+    return { state:'up', remaining:0, t:1 };
+  }
+
+  function rank(state){
+    return state==='up' ? 0 : state==='window' ? 1 : state==='counting' ? 2 : 3;
+  }
+
+  function bossAggregate(boss, now){
+    let best = null;
+    boss.channels.forEach(ch => {
+      const st = channelStatus(ch, boss.respawnMin, now);
+      if(best === null || rank(st.state) < rank(best.state) ||
+         (rank(st.state) === rank(best.state) && st.remaining < best.remaining)){
+        best = st;
+      }
+    });
+    return best || { state:'idle', remaining:0, t:0 };
+  }
+
+  // Interpolate amber (low probability) -> red (high probability / guaranteed)
+  function windowColor(t, alpha){
+    const c1 = [224,168,60];  // warn amber
+    const c2 = [226,85,74];   // danger red
+    const r = Math.round(c1[0] + (c2[0]-c1[0])*t);
+    const g = Math.round(c1[1] + (c2[1]-c1[1])*t);
+    const b = Math.round(c1[2] + (c2[2]-c1[2])*t);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  function beep(){
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'sine';
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.15, audioCtx.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start();
+      o.stop(audioCtx.currentTime + 0.5);
+    }catch(e){ /* audio not available */ }
+  }
+
+  function migrate(list){
+    return (list || []).map(b => {
+      if(Array.isArray(b.channels) && b.channels.length === CHANNEL_COUNT && 'killedAt' in (b.channels[0]||{})){
+        return { id:b.id, name:b.name, location:b.location, respawnMin:b.respawnMin,
+                 channels: b.channels.map(ch => ({ killedAt: ch.killedAt || null })) };
+      }
+      const channels = freshChannels();
+      if(b.killedAt) channels[0] = { killedAt: b.killedAt };
+      return { id: b.id, name: b.name, location: b.location, respawnMin: b.respawnMin, channels };
+    });
+  }
+
+  async function loadBosses(){
+    try{
+      const res = await window.storage.get(STORAGE_KEY, false);
+      if(res && res.value){
+        bosses = migrate(JSON.parse(res.value));
+      } else {
+        bosses = defaultBosses();
+        await saveBosses();
+      }
+    }catch(err){
+      bosses = defaultBosses();
+    }
+    render();
+  }
+
+  async function saveBosses(){
+    try{
+      await window.storage.set(STORAGE_KEY, JSON.stringify(bosses), false);
+    }catch(err){
+      console.error('Failed to save', err);
+    }
+  }
+
+  function killChannel(bossId, chIdx){
+    const b = bosses.find(x=>x.id===bossId);
+    if(!b) return;
+    b.channels[chIdx] = { killedAt: Date.now() };
+    dinged.delete(`${bossId}-${chIdx}`);
+    saveBosses(); render();
+  }
+
+  function resetChannel(bossId, chIdx){
+    const b = bosses.find(x=>x.id===bossId);
+    if(!b) return;
+    b.channels[chIdx] = { killedAt:null };
+    dinged.delete(`${bossId}-${chIdx}`);
+    saveBosses(); render();
+  }
+
+  function resetAllChannels(bossId){
+    const b = bosses.find(x=>x.id===bossId);
+    if(!b) return;
+    b.channels = freshChannels();
+    saveBosses(); render();
+  }
+
+  function deleteBoss(id){
+    bosses = bosses.filter(x=>x.id!==id);
+    saveBosses(); render();
+  }
+
+  function openModal(id){
+    editingId = id || null;
+    const existing = id ? bosses.find(x=>x.id===id) : null;
+    const root = document.getElementById('modalRoot');
+    root.innerHTML = `
+      <div class="modal-overlay" id="overlay">
+        <div class="modal">
+          <h2>${existing ? 'Edit Boss' : 'Add Mini Boss'}</h2>
+          <div class="field">
+            <label>Boss name</label>
+            <input type="text" id="fName" value="${existing ? escapeHtml(existing.name) : ''}" placeholder="e.g. Mushmom" autofocus>
+          </div>
+          <div class="field">
+            <label>Location</label>
+            <input type="text" id="fLoc" value="${existing ? escapeHtml(existing.location) : ''}" placeholder="e.g. Ellinia Forest">
+          </div>
+          <div class="field">
+            <label>Base respawn time (minutes)</label>
+            <input type="number" id="fRespawn" min="1" value="${existing ? existing.respawnMin : 45}">
+            <div class="field-hint">Counts down to base −15%, then the chance of it being up climbs until base +15%, where it's guaranteed.</div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost" id="cancelBtn">Cancel</button>
+            <button class="btn btn-primary" id="saveBtn">${existing ? 'Save' : 'Add Boss'}</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('cancelBtn').onclick = closeModal;
+    document.getElementById('overlay').onclick = (e)=>{ if(e.target.id==='overlay') closeModal(); };
+    document.getElementById('saveBtn').onclick = saveModal;
+    document.getElementById('fName').focus();
+  }
+
+  function closeModal(){
+    document.getElementById('modalRoot').innerHTML = '';
+    editingId = null;
+  }
+
+  function saveModal(){
+    const name = document.getElementById('fName').value.trim();
+    const loc = document.getElementById('fLoc').value.trim();
+    const respawn = parseFloat(document.getElementById('fRespawn').value);
+    if(!name || !respawn || respawn <= 0) return;
+
+    if(editingId){
+      const b = bosses.find(x=>x.id===editingId);
+      b.name = name; b.location = loc; b.respawnMin = respawn;
+    } else {
+      bosses.push({ id: crypto.randomUUID(), name, location: loc, respawnMin: respawn, channels: freshChannels() });
+    }
+    saveBosses();
+    closeModal();
+    render();
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str || '';
+    return d.innerHTML;
+  }
+
+  function render(){
+    const now = Date.now();
+    const query = (document.getElementById('searchInput')?.value || '').toLowerCase();
+    const sortBy = document.getElementById('sortSelect')?.value || 'respawn';
+
+    let list = bosses.map(b => ({ boss:b, agg: bossAggregate(b, now) }));
+
+    if(query){
+      list = list.filter(({boss}) =>
+        boss.name.toLowerCase().includes(query) || (boss.location||'').toLowerCase().includes(query)
+      );
+    }
+
+    list.sort((a,b) => {
+      if(sortBy === 'name') return a.boss.name.localeCompare(b.boss.name);
+      if(sortBy === 'location') return (a.boss.location||'').localeCompare(b.boss.location||'');
+      const ra = rank(a.agg.state), rb = rank(b.agg.state);
+      if(ra !== rb) return ra - rb;
+      if(ra === 1) return b.agg.t - a.agg.t; // window: higher probability first
+      if(ra === 2) return a.agg.remaining - b.agg.remaining;
+      return a.boss.name.localeCompare(b.boss.name);
+    });
+
+    let totalUp = 0;
+    bosses.forEach(b => b.channels.forEach(ch => {
+      if(channelStatus(ch, b.respawnMin, now).state === 'up') totalUp++;
+    }));
+    document.getElementById('upCount').textContent = totalUp;
+    document.getElementById('upDot').style.background = totalUp > 0 ? 'var(--danger)' : 'var(--muted)';
+    document.getElementById('upDot').style.boxShadow = totalUp > 0 ? '0 0 8px var(--danger-glow)' : 'none';
+
+    const container = document.getElementById('gridContainer');
+
+    if(bosses.length === 0){
+      container.innerHTML = `<div class="grid"><div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <div>No bosses tracked yet. Add your first mini boss to get started.</div>
+      </div></div>`;
+      return;
+    }
+
+    if(list.length === 0){
+      container.innerHTML = `<div class="grid"><div class="empty-state">No bosses match “${escapeHtml(query)}”.</div></div>`;
+      return;
+    }
+
+    container.innerHTML = `<div class="grid">${list.map(({boss, agg}) => {
+      const upInBoss = boss.channels.filter(ch => channelStatus(ch, boss.respawnMin, now).state === 'up').length;
+      const readyInBoss = boss.channels.filter(ch => channelStatus(ch, boss.respawnMin, now).state === 'idle').length;
+
+      let barColor = 'var(--muted)';
+      if(agg.state === 'counting') barColor = 'var(--amber-glow)';
+      else if(agg.state === 'window') barColor = windowColor(agg.t, 1);
+      else if(agg.state === 'up') barColor = 'var(--danger)';
+
+      const chips = boss.channels.map((ch, idx) => {
+        const st = channelStatus(ch, boss.respawnMin, now);
+        const showReset = st.state !== 'idle';
+        let timeText, subText, chipStyle = '';
+
+        if(st.state === 'idle'){
+          timeText = 'Ready'; subText = '';
+        } else if(st.state === 'counting'){
+          timeText = fmtClock(st.remaining); subText = 'until possible';
+        } else if(st.state === 'window'){
+          const pct = Math.round(st.t * 100);
+          timeText = `${pct}%`;
+          subText = `guaranteed in ${fmtClock(st.remaining)}`;
+          const bg = windowColor(st.t, 0.10 + st.t*0.20);
+          const border = windowColor(st.t, 0.35 + st.t*0.45);
+          const glow = windowColor(st.t, 0.15 + st.t*0.35);
+          chipStyle = `style="background:${bg}; border-color:${border}; box-shadow:0 0 ${6+st.t*14}px ${glow}; color:${windowColor(st.t,1)};"`;
+        } else {
+          timeText = 'UP'; subText = 'guaranteed';
+        }
+
+        return `
+          <div class="chip ${st.state}" ${chipStyle} data-boss="${boss.id}" data-ch="${idx}" title="Channel ${idx+1} — click when defeated">
+            ${showReset ? `<div class="chip-reset" data-action="reset" data-boss="${boss.id}" data-ch="${idx}" title="Reset to ready">✕</div>` : ''}
+            <div class="chip-ch">Ch ${idx+1}</div>
+            <div class="chip-time" ${st.state==='window' ? `style="color:${windowColor(st.t,1)};"` : ''}>${timeText}</div>
+            ${subText ? `<div class="chip-sub">${subText}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="card state-${agg.state}" data-id="${boss.id}" style="--bar-color:${barColor};">
+          <div class="card-top">
+            <div>
+              <div class="boss-name">${escapeHtml(boss.name)}</div>
+              ${boss.location ? `<div class="boss-loc">📍 ${escapeHtml(boss.location)}</div>` : ''}
+            </div>
+            <div class="card-menu">
+              <button class="icon-btn" data-action="edit" title="Edit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </button>
+              <button class="icon-btn" data-action="delete" title="Remove">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="channel-grid">${chips}</div>
+
+          <div class="respawn-note">
+            <span>Base <b>${boss.respawnMin} min</b> (±15%)</span>
+            <span class="channel-summary"><b>${upInBoss}</b> up · ${readyInBoss} ready</span>
+          </div>
+
+          <div class="card-actions">
+            <button class="btn btn-ghost" data-action="reset-all" data-boss="${boss.id}">Reset All Channels</button>
+          </div>
+        </div>
+      `;
+    }).join('')}</div>`;
+
+    if(soundOn){
+      bosses.forEach(boss => {
+        boss.channels.forEach((ch, idx) => {
+          const st = channelStatus(ch, boss.respawnMin, now);
+          const key = `${boss.id}-${idx}`;
+          if(st.state === 'up' && !dinged.has(key)){
+            dinged.add(key);
+            beep();
+          }
+        });
+      });
+    }
+
+    container.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        if(e.target.closest('[data-action="reset"]')) return;
+        killChannel(chip.dataset.boss, parseInt(chip.dataset.ch, 10));
+      });
+    });
+
+    container.querySelectorAll('[data-action="reset"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        resetChannel(btn.dataset.boss, parseInt(btn.dataset.ch, 10));
+      });
+    });
+
+    container.querySelectorAll('[data-action="reset-all"]').forEach(btn => {
+      btn.addEventListener('click', () => resetAllChannels(btn.dataset.boss));
+    });
+
+    container.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener('click', (e) => openModal(e.target.closest('.card').dataset.id));
+    });
+    container.querySelectorAll('[data-action="delete"]').forEach(btn => {
+      btn.addEventListener('click', (e) => deleteBoss(e.target.closest('.card').dataset.id));
+    });
+  }
+
+  document.getElementById('addBossBtn').addEventListener('click', () => openModal(null));
+  document.getElementById('searchInput').addEventListener('input', render);
+  document.getElementById('sortSelect').addEventListener('change', render);
+  document.getElementById('soundToggle').addEventListener('click', (e) => {
+    soundOn = !soundOn;
+    e.currentTarget.classList.toggle('active', soundOn);
+  });
+
+  setInterval(render, 1000);
+  loadBosses();
+})();
+</script>
+
+</body>
+</html>
