@@ -591,14 +591,14 @@
     });
   }
 
-  async function loadBosses(){
+  function loadBosses(){
     try{
-      const res = await window.storage.get(STORAGE_KEY, false);
-      if(res && res.value){
-        bosses = migrate(JSON.parse(res.value));
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        bosses = migrate(JSON.parse(raw));
       } else {
         bosses = defaultBosses();
-        await saveBosses();
+        saveBosses();
       }
     }catch(err){
       bosses = defaultBosses();
@@ -606,9 +606,9 @@
     render();
   }
 
-  async function saveBosses(){
+  function saveBosses(){
     try{
-      await window.storage.set(STORAGE_KEY, JSON.stringify(bosses), false);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(bosses));
     }catch(err){
       console.error('Failed to save', err);
     }
