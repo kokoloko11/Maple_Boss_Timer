@@ -472,8 +472,8 @@
   </div>
 
   <footer>
-    Click a channel the moment you defeat it there. It counts down to the earliest possible respawn (base −15%),<br>
-    then enters a spawn window that grows more intense the closer it gets to the latest possible respawn (base +15%) — guaranteed up by then.
+    Click a channel the moment you defeat it there. It counts down to the earliest possible respawn (base −10%),<br>
+    then enters a spawn window that grows more intense the closer it gets to the latest possible respawn (base +10%) — guaranteed up by then.
   </footer>
 </div>
 
@@ -675,7 +675,7 @@
           <div class="field">
             <label>Base respawn time (minutes)</label>
             <input type="number" id="fRespawn" min="1" value="${existing ? existing.respawnMin : 45}">
-            <div class="field-hint">Counts down to base −15%, then the chance of it being up climbs until base +15%, where it's guaranteed.</div>
+            <div class="field-hint">Counts down to base −10%, then the chance of it being up climbs until base +10%, where it's guaranteed.</div>
           </div>
           <div class="modal-actions">
             <button class="btn btn-ghost" id="cancelBtn">Cancel</button>
@@ -824,7 +824,7 @@
           <div class="channel-grid">${chips}</div>
 
           <div class="respawn-note">
-            <span>Base <b>${boss.respawnMin} min</b> (±15%)</span>
+            <span>Base <b>${boss.respawnMin} min</b> (±10%)</span>
             <span class="channel-summary"><b>${upInBoss}</b> up · ${readyInBoss} ready</span>
           </div>
 
