@@ -26,6 +26,24 @@
     --shadow: 0 8px 24px rgba(0,0,0,0.35);
   }
 
+  html[data-theme="light"]{
+    --bg-deep:#f4f1e8;
+    --bg-panel:#ffffff;
+    --bg-card:#ffffff;
+    --bg-card-hover:#f6f2e6;
+    --border:rgba(30,26,15,0.09);
+    --border-strong:rgba(30,26,15,0.16);
+    --cream:#2a2416;
+    --muted:#6d6754;
+    --amber:#c97e1f;
+    --amber-glow:#e0983c;
+    --safe:#3f8a58;
+    --warn:#c9962c;
+    --danger:#d1493e;
+    --danger-glow:#e2554a;
+    --shadow: 0 8px 24px rgba(0,0,0,0.10);
+  }
+
   *{box-sizing:border-box;}
 
   @media (prefers-reduced-motion: reduce){
@@ -42,7 +60,13 @@
     color:var(--cream);
     font-family:'Inter', system-ui, sans-serif;
     min-height:100vh;
+    transition:background 0.2s ease, color 0.2s ease;
   }
+
+  .theme-toggle svg{display:block;}
+  .theme-toggle .icon-moon{display:none;}
+  html[data-theme="light"] .theme-toggle .icon-sun{display:none;}
+  html[data-theme="light"] .theme-toggle .icon-moon{display:block;}
 
   .wrap{
     max-width:1180px;
@@ -444,6 +468,10 @@
     </div>
     <div class="header-actions">
       <div class="stat-pill"><span class="stat-dot" id="upDot"></span><b id="upCount">0</b>&nbsp;guaranteed up</div>
+      <button class="btn btn-ghost theme-toggle" id="themeToggle" title="Toggle light / dark theme">
+        <svg class="icon-sun" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+      </button>
       <button class="btn btn-ghost" id="soundToggle" title="Toggle alert sound">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M19 9a5 5 0 0 1 0 6"/></svg>
         Sound
@@ -873,6 +901,22 @@
       btn.addEventListener('click', (e) => deleteBoss(e.target.closest('.card').dataset.id));
     });
   }
+
+  function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('bossWatchTheme', theme);
+  }
+
+  (function initTheme(){
+    const saved = localStorage.getItem('bossWatchTheme');
+    const preferred = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    applyTheme(preferred);
+  })();
+
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    applyTheme(current === 'light' ? 'dark' : 'light');
+  });
 
   document.getElementById('addBossBtn').addEventListener('click', () => openModal(null));
   document.getElementById('searchInput').addEventListener('input', render);
