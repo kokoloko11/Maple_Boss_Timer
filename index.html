@@ -500,8 +500,9 @@
   </div>
 
   <footer>
-    Click a channel the moment you defeat it there. It counts down to the earliest possible respawn (base −10%),<br>
-    then enters a spawn window that grows more intense the closer it gets to the latest possible respawn (base +10%) — guaranteed up by then.
+    Shared board — anyone with this link sees and edits the same bosses and timers, so click a channel the moment<br>
+    <em>anyone in your party</em> defeats it there. It counts down to the earliest possible respawn (base −10%), then enters a<br>
+    spawn window that grows more intense toward the latest possible respawn (base +10%) — guaranteed up by then.
   </footer>
 </div>
 
@@ -633,14 +634,14 @@
     });
   }
 
-  function loadBosses(){
+  async function loadBosses(){
     try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if(raw){
-        bosses = migrate(JSON.parse(raw));
+      const res = await window.storage.get(STORAGE_KEY, true);
+      if(res && res.value){
+        bosses = migrate(JSON.parse(res.value));
       } else {
         bosses = defaultBosses();
-        saveBosses();
+        await saveBosses();
       }
     }catch(err){
       bosses = defaultBosses();
@@ -648,12 +649,22 @@
     render();
   }
 
-  function saveBosses(){
+  async function saveBosses(){
     try{
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(bosses));
+      await window.storage.set(STORAGE_KEY, JSON.stringify(bosses), true);
     }catch(err){
       console.error('Failed to save', err);
     }
+  }
+
+  async function syncFromStorage(){
+    try{
+      const res = await window.storage.get(STORAGE_KEY, true);
+      if(res && res.value){
+        bosses = migrate(JSON.parse(res.value));
+      }
+    }catch(err){ /* ignore transient sync errors */ }
+    render();
   }
 
   function killChannel(bossId, chIdx){
@@ -902,20 +913,19 @@
     });
   }
 
+  let currentTheme = 'dark';
   function applyTheme(theme){
+    currentTheme = theme;
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('bossWatchTheme', theme);
   }
 
   (function initTheme(){
-    const saved = localStorage.getItem('bossWatchTheme');
-    const preferred = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    const preferred = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
     applyTheme(preferred);
   })();
 
   document.getElementById('themeToggle').addEventListener('click', () => {
-    const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-    applyTheme(current === 'light' ? 'dark' : 'light');
+    applyTheme(currentTheme === 'light' ? 'dark' : 'light');
   });
 
   document.getElementById('addBossBtn').addEventListener('click', () => openModal(null));
@@ -927,6 +937,7 @@
   });
 
   setInterval(render, 1000);
+  setInterval(syncFromStorage, 8000);
   loadBosses();
 })();
 </script>
