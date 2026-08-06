@@ -657,7 +657,12 @@ const bossesRef = ref(db, 'bosses');
     try{
       const obj = {};
       bosses.forEach(b => { obj[b.id] = b; });
-      set(bossesRef, obj);
+      console.log('[DEBUG] saveBosses writing', Object.keys(obj).length, 'bosses to Firebase');
+      set(bossesRef, obj).then(() => {
+        console.log('[DEBUG] Firebase write SUCCEEDED');
+      }).catch((err) => {
+        console.error('[DEBUG] Firebase write FAILED (async)', err);
+      });
     }catch(err){
       console.error('Failed to save', err);
     }
@@ -666,6 +671,7 @@ const bossesRef = ref(db, 'bosses');
   function initBossListener(){
     onValue(bossesRef, (snapshot) => {
       const val = snapshot.val();
+      console.log('[DEBUG] onValue fired, has data?', !!val);
       if(val){
         bosses = migrate(Object.values(val));
       } else if(!firebaseReady){
@@ -675,7 +681,7 @@ const bossesRef = ref(db, 'bosses');
       firebaseReady = true;
       render();
     }, (err) => {
-      console.error('Firebase read failed', err);
+      console.error('[DEBUG] Firebase read failed', err);
       if(!firebaseReady){
         bosses = defaultBosses();
         firebaseReady = true;
@@ -685,11 +691,15 @@ const bossesRef = ref(db, 'bosses');
   }
 
   function killChannel(bossId, chIdx){
+    console.log('[DEBUG] killChannel called with', bossId, chIdx);
     const b = bosses.find(x=>x.id===bossId);
+    console.log('[DEBUG] found boss?', b ? b.name : 'NOT FOUND');
     if(!b) return;
     b.channels[chIdx] = { killedAt: Date.now() };
+    console.log('[DEBUG] channel updated to', b.channels[chIdx]);
     dinged.delete(`${bossId}-${chIdx}`);
     saveBosses(); render();
+    console.log('[DEBUG] saveBosses + render called');
   }
 
   function resetChannel(bossId, chIdx){
@@ -776,6 +786,7 @@ const bossesRef = ref(db, 'bosses');
 
   function render(){
     const now = Date.now();
+    console.log('[DEBUG] render() running, bosses count:', bosses.length);
     const query = (document.getElementById('searchInput')?.value || '').toLowerCase();
     const sortBy = document.getElementById('sortSelect')?.value || 'respawn';
 
