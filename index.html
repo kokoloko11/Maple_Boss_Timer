@@ -508,9 +508,26 @@
 
 <div id="modalRoot"></div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+
+// ---- Firebase config ----
+const firebaseConfig = {
+  apiKey: "AIzaSyDz6-GAdHCki1OSadj60BLutFdhKQknV5w",
+  authDomain: "maplebosstimer.firebaseapp.com",
+  databaseURL: "https://maplebosstimer-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "maplebosstimer",
+  storageBucket: "maplebosstimer.firebasestorage.app",
+  messagingSenderId: "367678814301",
+  appId: "1:367678814301:web:f5f0c6e812e0247f6fb5b4"
+};
+// --------------------------
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
+const bossesRef = ref(db, 'bosses');
 (function(){
-  const STORAGE_KEY = 'bosses';
   const CHANNEL_COUNT = 6;
   const VARIANCE = 0.1;
   let bosses = [];
@@ -634,37 +651,37 @@
     });
   }
 
-  async function loadBosses(){
-    try{
-      const res = await window.storage.get(STORAGE_KEY, true);
-      if(res && res.value){
-        bosses = migrate(JSON.parse(res.value));
-      } else {
-        bosses = defaultBosses();
-        await saveBosses();
-      }
-    }catch(err){
-      bosses = defaultBosses();
-    }
-    render();
-  }
+  let firebaseReady = false;
 
-  async function saveBosses(){
+  function saveBosses(){
     try{
-      await window.storage.set(STORAGE_KEY, JSON.stringify(bosses), true);
+      const obj = {};
+      bosses.forEach(b => { obj[b.id] = b; });
+      set(bossesRef, obj);
     }catch(err){
       console.error('Failed to save', err);
     }
   }
 
-  async function syncFromStorage(){
-    try{
-      const res = await window.storage.get(STORAGE_KEY, true);
-      if(res && res.value){
-        bosses = migrate(JSON.parse(res.value));
+  function initBossListener(){
+    onValue(bossesRef, (snapshot) => {
+      const val = snapshot.val();
+      if(val){
+        bosses = migrate(Object.values(val));
+      } else if(!firebaseReady){
+        bosses = defaultBosses();
+        saveBosses();
       }
-    }catch(err){ /* ignore transient sync errors */ }
-    render();
+      firebaseReady = true;
+      render();
+    }, (err) => {
+      console.error('Firebase read failed', err);
+      if(!firebaseReady){
+        bosses = defaultBosses();
+        firebaseReady = true;
+        render();
+      }
+    });
   }
 
   function killChannel(bossId, chIdx){
@@ -937,8 +954,7 @@
   });
 
   setInterval(render, 1000);
-  setInterval(syncFromStorage, 8000);
-  loadBosses();
+  initBossListener();
 })();
 </script>
 
