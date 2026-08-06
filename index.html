@@ -476,6 +476,10 @@
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M19 9a5 5 0 0 1 0 6"/></svg>
         Sound
       </button>
+      <button class="btn btn-ghost" id="lockToggle" title="View only — click to unlock editing">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        <span class="lock-label">View only</span>
+      </button>
       <button class="btn btn-primary" id="addBossBtn">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
         Add Boss
@@ -511,6 +515,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
 // ---- Firebase config ----
 const firebaseConfig = {
@@ -527,6 +532,15 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getDatabase(firebaseApp);
 const bossesRef = ref(db, 'bosses');
+const auth = getAuth(firebaseApp);
+
+// ---- Shared "editor" login ----
+// This is NOT a real inbox — Firebase just uses it as an account identifier.
+// Create this exact email as a user under Firebase Console > Authentication > Users,
+// with whatever password you want to hand out to friends.
+const SHARED_EDITOR_EMAIL = "friends@mapleboss.local";
+// --------------------------------
+
 (function(){
   const CHANNEL_COUNT = 6;
   const VARIANCE = 0.1;
@@ -534,7 +548,44 @@ const bossesRef = ref(db, 'bosses');
   let editingId = null;
   let soundOn = false;
   let audioCtx = null;
+  let unlocked = false;
   const dinged = new Set();
+
+  function updateLockUI(){
+    const btn = document.getElementById('lockToggle');
+    if(!btn) return;
+    btn.classList.toggle('active', unlocked);
+    btn.title = unlocked ? 'Editing unlocked — click to lock' : 'View only — click to unlock editing';
+    btn.querySelector('.lock-label').textContent = unlocked ? 'Unlocked' : 'View only';
+  }
+
+  onAuthStateChanged(auth, (user) => {
+    unlocked = !!user;
+    updateLockUI();
+  });
+
+  function attemptUnlock(){
+    if(unlocked) return Promise.resolve(true);
+    const pwd = prompt('Enter the editor password to make changes:');
+    if(!pwd) return Promise.resolve(false);
+    return signInWithEmailAndPassword(auth, SHARED_EDITOR_EMAIL, pwd)
+      .then(() => true)
+      .catch((err) => {
+        console.error('[DEBUG] sign-in failed', err);
+        alert('Wrong password.');
+        return false;
+      });
+  }
+
+  // Wraps a mutating function so it prompts for the shared password
+  // the first time, then runs the action once unlocked.
+  function requireUnlock(fn){
+    return async function(...args){
+      const ok = await attemptUnlock();
+      if(!ok) return;
+      return fn(...args);
+    };
+  }
 
   function freshChannels(){
     return Array.from({length: CHANNEL_COUNT}, () => ({ killedAt:0 }));
@@ -690,7 +741,7 @@ const bossesRef = ref(db, 'bosses');
     });
   }
 
-  function killChannel(bossId, chIdx){
+  function killChannelImpl(bossId, chIdx){
     console.log('[DEBUG] killChannel called with', bossId, chIdx);
     const b = bosses.find(x=>x.id===bossId);
     console.log('[DEBUG] found boss?', b ? b.name : 'NOT FOUND');
@@ -701,26 +752,30 @@ const bossesRef = ref(db, 'bosses');
     saveBosses(); render();
     console.log('[DEBUG] saveBosses + render called');
   }
+  const killChannel = requireUnlock(killChannelImpl);
 
-  function resetChannel(bossId, chIdx){
+  function resetChannelImpl(bossId, chIdx){
     const b = bosses.find(x=>x.id===bossId);
     if(!b) return;
     b.channels[chIdx] = { killedAt:0 };
     dinged.delete(`${bossId}-${chIdx}`);
     saveBosses(); render();
   }
+  const resetChannel = requireUnlock(resetChannelImpl);
 
-  function resetAllChannels(bossId){
+  function resetAllChannelsImpl(bossId){
     const b = bosses.find(x=>x.id===bossId);
     if(!b) return;
     b.channels = freshChannels();
     saveBosses(); render();
   }
+  const resetAllChannels = requireUnlock(resetAllChannelsImpl);
 
-  function deleteBoss(id){
+  function deleteBossImpl(id){
     bosses = bosses.filter(x=>x.id!==id);
     saveBosses(); render();
   }
+  const deleteBoss = requireUnlock(deleteBossImpl);
 
   function openModal(id){
     editingId = id || null;
@@ -761,7 +816,7 @@ const bossesRef = ref(db, 'bosses');
     editingId = null;
   }
 
-  function saveModal(){
+  function saveModalImpl(){
     const name = document.getElementById('fName').value.trim();
     const loc = document.getElementById('fLoc').value.trim();
     const respawn = parseFloat(document.getElementById('fRespawn').value);
@@ -777,6 +832,7 @@ const bossesRef = ref(db, 'bosses');
     closeModal();
     render();
   }
+  const saveModal = requireUnlock(saveModalImpl);
 
   function escapeHtml(str){
     const d = document.createElement('div');
@@ -957,6 +1013,13 @@ const bossesRef = ref(db, 'bosses');
   });
 
   document.getElementById('addBossBtn').addEventListener('click', () => openModal(null));
+  document.getElementById('lockToggle').addEventListener('click', async () => {
+    if(unlocked){
+      if(confirm('Lock editing again on this device?')) signOut(auth);
+    } else {
+      await attemptUnlock();
+    }
+  });
   document.getElementById('searchInput').addEventListener('input', render);
   document.getElementById('sortSelect').addEventListener('change', render);
   document.getElementById('soundToggle').addEventListener('click', (e) => {
