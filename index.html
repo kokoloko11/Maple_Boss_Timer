@@ -537,7 +537,7 @@ const bossesRef = ref(db, 'bosses');
   const dinged = new Set();
 
   function freshChannels(){
-    return Array.from({length: CHANNEL_COUNT}, () => ({ killedAt:null }));
+    return Array.from({length: CHANNEL_COUNT}, () => ({ killedAt:0 }));
   }
 
   const defaultBosses = () => ([
@@ -641,9 +641,9 @@ const bossesRef = ref(db, 'bosses');
 
   function migrate(list){
     return (list || []).map(b => {
-      if(Array.isArray(b.channels) && b.channels.length === CHANNEL_COUNT && 'killedAt' in (b.channels[0]||{})){
+      if(Array.isArray(b.channels) && b.channels.length === CHANNEL_COUNT){
         return { id:b.id, name:b.name, location:b.location, respawnMin:b.respawnMin,
-                 channels: b.channels.map(ch => ({ killedAt: ch.killedAt || null })) };
+                 channels: b.channels.map(ch => ({ killedAt: ch.killedAt || 0 })) };
       }
       const channels = freshChannels();
       if(b.killedAt) channels[0] = { killedAt: b.killedAt };
@@ -705,7 +705,7 @@ const bossesRef = ref(db, 'bosses');
   function resetChannel(bossId, chIdx){
     const b = bosses.find(x=>x.id===bossId);
     if(!b) return;
-    b.channels[chIdx] = { killedAt:null };
+    b.channels[chIdx] = { killedAt:0 };
     dinged.delete(`${bossId}-${chIdx}`);
     saveBosses(); render();
   }
